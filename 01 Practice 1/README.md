@@ -91,7 +91,7 @@ var orderItemsDF = sqlContext.read.avro("/user/cloudera/problem1/order-items");
 _"Expected Intermediate Result: Order_Date , Order_status, total_orders, total_amount. In plain English, please find total orders and total amount per status per day. The result should be sorted by order date in descending, order status in ascending and total amount in descending and total orders in ascending. Aggregation should be done using below methods. However, sorting can be done using a dataframe or RDD. Perform aggregation in each of the following ways
 	1. Just by using Data Frames API - here order_date should be YYYY-MM-DD format
 	2. Using Spark SQL - here order_date should be YYYY-MM-DD format
-    3. By using combineByKey function on RDDS -- No need of formatting order\_date or total\_amount"_
+    3. By using combineByKey function on RDDS -- No need of formatting order_date or total_amount"_
 #### Solution - Preparation
 1. [Optional] To show the content of the _orders_ and _order-items_ you just need to run the following command in the MySql Command Line (see more details on Step 1):
 ```
@@ -120,7 +120,7 @@ import org.apache.spark.sql.functions._;
 ```
 2. Type this in your Spark Shell to get the solution using [Spark SQL](https://spark.apache.org/sql/):
 ```
-joinedOrderDataDF.
+var dataFrameResult = joinedOrderDataDF.
 	groupBy(
 		to_date(from_unixtime(col("order_date")/1000)).alias("order_formatted_date"),
 		col("order_status")
@@ -139,7 +139,7 @@ joinedOrderDataDF.
 ```
 joinedOrderDataDF.registerTempTable("order_joined");
 ```
-2. Type this in your Spark Shell to get the solution using the dataframes API:
+2. Type this in your Spark Shell to get the solution using the *combineByKey* function:
 ```
 var sqlResult = 
 	sqlContext.sql("
@@ -152,20 +152,107 @@ var sqlResult =
 		GROUP BY to_date(from_unixtime(cast(order_date/1000 as bigint))), order_status
 		ORDER BY order_formatted_date desc,order_status,total_amount desc, total_orders
 	");
-  
+```
+3. [Optional] Show the results typing the following code in the Spark Shell:
+```
 sqlResult.show();
 ```
 #### Solution - 4.3
-1. .
+1. Type this in your Spark Shell to get the solution using the [combineByKey function](http://spark.apache.org/docs/latest/api/scala/index.html#org.apache.spark.rdd.PairRDDFunctions):
 ```
-joinedOrderDataDF.map(
-	x=> ((x(1).toString,x(3).toString),(x(8).toString.toFloat,x(0).toString))).
-combineByKey((x:(Float, String))=>(x._1,Set(x._2)),
-(x:(Float,Set[String]),y:(Float,String))=>(x._1 + y._1,x._2+y._2),
-(x:(Float,Set[String]),y:(Float,Set[String]))=>(x._1+y._1,x._2++y._2)).
-map(x=> (x._1._1,x._1._2,x._2._1,x._2._2.size)).
-toDF().
-orderBy(col("_1").desc,col("_2"),col("_3").desc,col("_4"));
-
+var comByKeyResult = joinedOrderDataDF.
+	map(
+		x => (
+			(x(1).toString, x(3).toString),
+			(x(8).toString.toFloat, x(0).toString)
+		)
+	).
+	combineByKey(
+		(x:(Float, String)) => (x._1,Set(x._2)),
+		(x:(Float, Set[String]), y:(Float, String)) => (x._1 + y._1, x._2 + y._2),
+		(x:(Float, Set[String]), y:(Float, Set[String])) => (x._1 + y._1, x._2 + y._2)
+	).
+	map(x => (x._1._1, x._1._2, x._2._1, x._2._2.size)).
+	toDF().
+	orderBy(col("_1").desc, col("_2"), col("_3").desc, col("_4"));
+```
+2. [Optional] Show the results typing the following code in the Spark Shell:
+```
 comByKeyResult.show();
+```
+### Step 5 - Description
+_"Store the result as parquet file into hdfs using gzip compression under folder
+    1.   /user/cloudera/problem1/result4a-gzip (result from step 4.1)
+    2.   /user/cloudera/problem1/result4b-gzip (result from step 4.2)
+    3.   /user/cloudera/problem1/result4c-gzip (result from step 4.3)"_
+#### Solution
+1. Set the compression codec to use *gzip* when [writing Parquet files](https://spark.apache.org/docs/1.5.2/sql-programming-guide.html#configuration) using the following command in the Spark Shell:
+```
+sqlContext.setConf("spark.sql.parquet.compression.codec", "gzip");
+```
+2. Run the following commands in the Spark Shell to generate the files in HDFS using the *gzip* compression:
+```
+dataFrameResult.write.parquet("/user/cloudera/problem1/result4a-gzip");
+sqlResult.write.parquet("/user/cloudera/problem1/result4b-gzip");
+comByKeyResult.write.parquet("/user/cloudera/problem1/result4c-gzip");
+```
+
+### Step 6 - Description
+_"Store the result as parquet file into hdfs using snappy compression under folder
+    1.   /user/cloudera/problem1/result4a-snappy (result from step 4.1)
+    2.   /user/cloudera/problem1/result4b-snappy (result from step 4.2)
+    3.   /user/cloudera/problem1/result4c-snappy (result from step 4.3)"_
+
+#### Solution
+1. Set the compression codec to use *snappy* when writing Parquet files using the following command in the Spark Shell:
+```
+sqlContext.setConf("spark.sql.parquet.compression.codec", "snappy");
+```
+2. Run the following commands in the Spark Shell to generate the files in HDFS using the *snappy* compression:
+```
+dataFrameResult.write.parquet("/user/cloudera/problem1/result4a-snappy");
+sqlResult.write.parquet("/user/cloudera/problem1/result4b-snappy");
+comByKeyResult.write.parquet("/user/cloudera/problem1/result4c-snappy");
+```
+### Step 7 - Description
+_"Store the result as CSV file into hdfs using No compression under folder
+    1.   /user/cloudera/problem1/result4a-csv (result from step 4.1)
+    2.   /user/cloudera/problem1/result4b-csv (result from step 4.2)
+    3.   /user/cloudera/problem1/result4c-csv (result from step 4.3)"_
+
+#### Solution
+1. Run the following commands in the Spark Shell to generate the *csv* files in HDFS:
+```
+dataFrameResult.map(x=> x(0) + "," + x(1) + "," + x(2) + "," + x(3)).saveAsTextFile("/user/cloudera/problem1/result4a-csv")
+sqlResult.map(x=> x(0) + "," + x(1) + "," + x(2) + "," + x(3)).saveAsTextFile("/user/cloudera/problem1/result4b-csv")
+comByKeyResult.map(x=> x(0) + "," + x(1) + "," + x(2) + "," + x(3)).saveAsTextFile("/user/cloudera/problem1/result4c-csv")
+```
+
+### Step 8 - Description
+_"Create a MySql table named result and load data from **/user/cloudera/problem1/result4a-csv** to a MySql table named **result**"_
+
+#### Solution
+1. Login to MySql using the following command in your Terminal window:
+```
+mysql -uroot -pcloudera
+```
+2. Create the *result* table in the *retail_db* database using the MySql Command Line:
+```
+CREATE TABLE retail_db.result(
+	order_date varchar(255) not null,
+	order_status varchar(255) not null,
+	total_orders int,
+	total_amount numeric,
+	CONSTRAINT pk_order_result PRIMARY KEY (order_date, order_status)
+); 
+```
+3. Load the *result4a-csv* file from HDFS to the *result* table in MySql using the following command in your Terminal window:
+```
+sqoop export \
+  --table result \
+  --connect "jdbc:mysql://quickstart.cloudera:3306/retail_db" \
+  --username retail_dba \
+  --password cloudera \
+  --export-dir "/user/cloudera/problem1/result4a-csv" \
+  --columns "order_date,order_status,total_amount,total_orders"
 ```
