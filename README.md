@@ -20,3 +20,6 @@ _Soon..._
 * _Problem 4_
 * _Problem 5_
 * _Problem 6_
+
+## Tips
+* If you want to copy text from your host to your VM, you can change the configuration to [Share the clipboard](https://www.liberiangeek.net/2013/09/copy-paste-virtualbox-host-guest-machines/)
