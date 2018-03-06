@@ -100,15 +100,20 @@ SHOW COLUMNS FROM orders;
 ```
 SHOW COLUMNS FROM order-items;
 ```
-2. Join the data frames created in the _Step 3_:
+2. Enter to [paste mode](https://alvinalexander.com/scala/how-to-enter-paste-multiline-commands-statements-into-scala-repl) in your Spark Shell:
+```
+:paste
+```
+
+3. Join the data frames created in the _Step 3_:
 ```
 var joinedOrderDataDF = ordersDF.join(
 	orderItemsDF,
-	ordersDF("order_id") === orderItemDF("order_item_order_id")
+	ordersDF("order_id") === orderItemsDF("order_item_order_id")
 );
 ```
 **Note:** use the [Spark DataFrame join method](https://docs.databricks.com/spark/latest/faq/join-two-dataframes-duplicated-column.html)
-3. [Optional] Show the top 20 rows of the joined dataframe:
+4. [Optional] Show the top 20 rows of the joined dataframe:
 ```
 joinedOrderDataDF.show();
 ```
