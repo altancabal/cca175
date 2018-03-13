@@ -93,12 +93,12 @@ _"Expected Intermediate Result: Order_Date , Order_status, total_orders, total_a
 	2. Using Spark SQL - here order_date should be YYYY-MM-DD format
     3. By using combineByKey function on RDDS -- No need of formatting order_date or total_amount"_
 #### Solution - Preparation
-1. [Optional] To show the content of the _orders_ and _order-items_ you just need to run the following command in the MySql Command Line (see more details on Step 1):
+1. [Optional] To show the content of the _orders_ and _order_items_ you just need to run the following command in the MySql Command Line (see more details on Step 1):
 ```
 SHOW COLUMNS FROM orders;
 ```
 ```
-SHOW COLUMNS FROM order-items;
+SHOW COLUMNS FROM order_items;
 ```
 2. Enter to [paste mode](https://alvinalexander.com/scala/how-to-enter-paste-multiline-commands-statements-into-scala-repl) in your Spark Shell:
 ```
@@ -108,11 +108,12 @@ SHOW COLUMNS FROM order-items;
 3. Join the data frames created in the _Step 3_:
 ```
 var joinedOrderDataDF = ordersDF.join(
-	orderItemsDF,
-	ordersDF("order_id") === orderItemsDF("order_item_order_id")
+   orderItemsDF,
+   ordersDF("order_id") === orderItemsDF("order_item_order_id")
 );
 ```
 **Note:** use the [Spark DataFrame join method](https://docs.databricks.com/spark/latest/faq/join-two-dataframes-duplicated-column.html)
+
 4. [Optional] Show the top 20 rows of the joined dataframe:
 ```
 joinedOrderDataDF.show();
@@ -123,73 +124,73 @@ joinedOrderDataDF.show();
 ```
 import org.apache.spark.sql.functions._;
 ```
-2. Type this in your Spark Shell to get the solution using [Spark SQL](https://spark.apache.org/sql/):
+2. Type this in your Spark Shell (paste mode) to get the solution using [Spark SQL](https://spark.apache.org/sql/):
 ```
 var dataFrameResult = joinedOrderDataDF.
-	groupBy(
-		to_date(from_unixtime(col("order_date")/1000)).alias("order_formatted_date"),
-		col("order_status")
-	).
-	agg(
-		round(sum("order_item_subtotal"), 2).alias("total_amount"),
-		countDistinct("order_id").alias("total_orders")).
-	orderBy(
-		col("order_formatted_date").desc,
-		col("order_status"),
-		col("total_amount").desc,
-		col("total_orders"));
+   groupBy(
+      to_date(from_unixtime(col("order_date")/1000)).alias("order_formatted_date"),
+      col("order_status")
+   ).
+   agg(
+      round(sum("order_item_subtotal"), 2).alias("total_amount"),
+      countDistinct("order_id").alias("total_orders")).
+   orderBy(
+      col("order_formatted_date").desc,
+      col("order_status"),
+      col("total_amount").desc,
+      col("total_orders"));
 ```
 #### Solution - 4.2
 1. Register a dataframe as a temporary table using [registerTempTable](https://docs.databricks.com/spark/latest/sparkr/functions/registerTempTable.html):
 ```
 joinedOrderDataDF.registerTempTable("order_joined");
 ```
-2. Type this in your Spark Shell to get the solution using the *combineByKey* function:
+2. Type this in your Spark Shell (paste mode) to get the solution using the *combineByKey* function:
 ```
 var sqlResult = 
-	sqlContext.sql("
-		SELECT
-			to_date(from_unixtime(cast(order_date/1000 as bigint))) AS order_formatted_date,
-			order_status,
-			cast(sum(order_item_subtotal) AS DECIMAL(10,2)) AS total_amount,
-			count(distinct(order_id)) AS total_orders
-		FROM order_joined
-		GROUP BY to_date(from_unixtime(cast(order_date/1000 as bigint))), order_status
-		ORDER BY order_formatted_date desc,order_status,total_amount desc, total_orders
-	");
+   sqlContext.sql("""
+      SELECT
+         to_date(from_unixtime(cast(order_date/1000 as bigint))) AS order_formatted_date,
+         order_status,
+         cast(sum(order_item_subtotal) AS DECIMAL(10,2)) AS total_amount,
+         count(distinct(order_id)) AS total_orders
+      FROM order_joined
+      GROUP BY to_date(from_unixtime(cast(order_date/1000 as bigint))), order_status
+      ORDER BY order_formatted_date desc,order_status,total_amount desc, total_orders
+   """);
 ```
 3. [Optional] Show the results typing the following code in the Spark Shell:
 ```
 sqlResult.show();
 ```
 #### Solution - 4.3
-1. Type this in your Spark Shell to get the solution using the [combineByKey function](http://spark.apache.org/docs/latest/api/scala/index.html#org.apache.spark.rdd.PairRDDFunctions):
+1. Type this in your Spark Shell (paste mode) to get the solution using the [combineByKey function](http://spark.apache.org/docs/latest/api/scala/index.html#org.apache.spark.rdd.PairRDDFunctions):
 ```
 var comByKeyResult = joinedOrderDataDF.
-	map(
-		x => (
-			(x(1).toString, x(3).toString),
-			(x(8).toString.toFloat, x(0).toString)
-		)
-	).
-	combineByKey(
-		(x:(Float, String)) => (x._1,Set(x._2)),
-		(x:(Float, Set[String]), y:(Float, String)) => (x._1 + y._1, x._2 + y._2),
-		(x:(Float, Set[String]), y:(Float, Set[String])) => (x._1 + y._1, x._2 + y._2)
-	).
-	map(x => (x._1._1, x._1._2, x._2._1, x._2._2.size)).
-	toDF().
-	orderBy(col("_1").desc, col("_2"), col("_3").desc, col("_4"));
+   map(
+      x => (
+         (x(1).toString, x(3).toString),
+         (x(8).toString.toFloat, x(0).toString)
+      )
+   ).
+   combineByKey(
+      (x:(Float, String)) => (x._1,Set(x._2)),
+      (x:(Float, Set[String]), y:(Float, String)) => (x._1 + y._1, x._2 + y._2),
+      (x:(Float, Set[String]), y:(Float, Set[String])) => (x._1 + y._1, x._2 ++ y._2)
+   ).
+   map(x => (x._1._1, x._1._2, x._2._1, x._2._2.size)).
+   toDF().
+   orderBy(col("_1").desc, col("_2"), col("_3").desc, col("_4"));
 ```
 2. [Optional] Show the results typing the following code in the Spark Shell:
 ```
 comByKeyResult.show();
 ```
 ### Step 5 - Description
-_"Store the result as parquet file into hdfs using gzip compression under folder
-    1.   /user/cloudera/problem1/result4a-gzip (result from step 4.1)
-    2.   /user/cloudera/problem1/result4b-gzip (result from step 4.2)
-    3.   /user/cloudera/problem1/result4c-gzip (result from step 4.3)"_
+_"Store the result as parquet file into hdfs using gzip compression under folder_
+1. _/user/cloudera/problem1/result4a-gzip (result from step 4.1)_
+2. _/user/cloudera/problem1/result4b-gzip (result from step 4.2)_
+3. _/user/cloudera/problem1/result4c-gzip (result from step 4.3)"_
 #### Solution
 1. Set the compression codec to use *gzip* when [writing Parquet files](https://spark.apache.org/docs/1.5.2/sql-programming-guide.html#configuration) using the following command in the Spark Shell:
 ```
@@ -249,7 +250,7 @@ CREATE TABLE retail_db.result(
 	total_orders int,
 	total_amount numeric,
 	CONSTRAINT pk_order_result PRIMARY KEY (order_date, order_status)
-); 
+);
 ```
 3. Load the *result4a-csv* file from HDFS to the *result* table in MySql using the following command in your Terminal window:
 ```
@@ -259,5 +260,5 @@ sqoop export \
   --username retail_dba \
   --password cloudera \
   --export-dir "/user/cloudera/problem1/result4a-csv" \
-  --columns "order_date,order_status,total_amount,total_orders"
+  --columns "order_date,order_status,total_amount,total_orders";
 ```
