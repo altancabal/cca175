@@ -88,10 +88,13 @@ var orderItemsDF = sqlContext.read.avro("/user/cloudera/problem1/order-items");
 ```
 
 ### Step 4 - Description
-_"Expected Intermediate Result: Order_Date , Order_status, total_orders, total_amount. In plain English, please find total orders and total amount per status per day. The result should be sorted by order date in descending, order status in ascending and total amount in descending and total orders in ascending. Aggregation should be done using below methods. However, sorting can be done using a dataframe or RDD. Perform aggregation in each of the following ways
-	1. Just by using Data Frames API - here order_date should be YYYY-MM-DD format
-	2. Using Spark SQL - here order_date should be YYYY-MM-DD format
-    3. By using combineByKey function on RDDS -- No need of formatting order_date or total_amount"_
+_"Expected Intermediate Result: Order_Date , Order_status, total_orders, total_amount._
+_In plain English, please find total orders and total amount per status per day._
+_The result should be sorted by order date in descending, order status in ascending and total amount in descending and total orders in ascending._
+_Aggregation should be done using below methods. However, sorting can be done using a dataframe or RDD. Perform aggregation in each of the following ways_
+	1. _Just by using Data Frames API - here order_date should be YYYY-MM-DD format_
+	2. _Using Spark SQL - here order_date should be YYYY-MM-DD format_
+    3. _By using combineByKey function on RDDS -- No need of formatting order_date or total_amount"_
 #### Solution - Preparation
 1. [Optional] To show the content of the _orders_ and _order_items_ you just need to run the following command in the MySql Command Line (see more details on Step 1):
 ```
