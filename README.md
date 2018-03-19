@@ -1,5 +1,5 @@
 # Practice problems for the CCA-175 certification
-The purpose of this repository is to provide practice and solutions for the [CCA-175 Certification](https://www.cloudera.com/more/training/certification/cca-spark.html) based on the problems provided in the [Arun's blog](http://arun-teaches-u-tech.blogspot.com/p/cca-175-prep-problem-scenario-1.html)
+The purpose of this repository is to provide practice and solutions for the [CCA-175 Certification](https://www.cloudera.com/more/training/certification/cca-spark.html)
 
 ## Environment
 ### VirtualBox
@@ -11,11 +11,13 @@ You can download the Cloudera Quickstart VM using [this link](https://www.cloude
 To use it with VirtualBox, you will need to download the VirtualBox version of the Cloudera Quickstart VM.
 
 ## Problems
-* [Problem 1](https://github.com/altancabal/cca175/tree/master/01%20Practice%201)
+### Arun's problems
+The first set of problems are based on the problems provided in the [Arun's blog](http://arun-teaches-u-tech.blogspot.com/p/cca-175-prep-problem-scenario-1.html)
+* [Problem 1](https://github.com/altancabal/cca175/tree/master/Practice%201)
+* [Problem 2](https://github.com/altancabal/cca175/tree/master/Practice%202)
 
 _Soon..._
 
-* _Problem 2_
 * _Problem 3_
 * _Problem 4_
 * _Problem 5_
