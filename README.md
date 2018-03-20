@@ -13,8 +13,8 @@ To use it with VirtualBox, you will need to download the VirtualBox version of t
 ## Problems
 ### Arun's problems
 The first set of problems are based on the problems provided in the [Arun's blog](http://arun-teaches-u-tech.blogspot.com/p/cca-175-prep-problem-scenario-1.html)
-* [Problem 1](https://github.com/altancabal/cca175/tree/master/Practice%201)
-* [Problem 2](https://github.com/altancabal/cca175/tree/master/Practice%202)
+* [Problem 1](https://github.com/altancabal/cca175/blob/master/Arun's%20practice/Practice%201)
+* [Problem 2](https://github.com/altancabal/cca175/tree/master/Arun's%20practice/Practice%202)
 
 _Soon..._
 

@@ -122,7 +122,7 @@ var joinedOrderDataDF = ordersDF.join(
 joinedOrderDataDF.show();
 ```
 
-#### Solution - 4.1
+#### Solution - 4.1 (Data Frame API)
 1. Enable the public dataframe functions API by typing the following import in the Spark Shell:
 ```
 import org.apache.spark.sql.functions._;
@@ -143,7 +143,7 @@ var dataFrameResult = joinedOrderDataDF.
       col("total_amount").desc,
       col("total_orders"));
 ```
-#### Solution - 4.2
+#### Solution - 4.2 (Spark SQL)
 1. Register a dataframe as a temporary table using [registerTempTable](https://docs.databricks.com/spark/latest/sparkr/functions/registerTempTable.html):
 ```
 joinedOrderDataDF.registerTempTable("order_joined");
@@ -166,7 +166,7 @@ var sqlResult =
 ```
 sqlResult.show();
 ```
-#### Solution - 4.3
+#### Solution - 4.3 (RDD combineByKey)
 1. Type this in your Spark Shell (paste mode) to get the solution using the [combineByKey function](http://spark.apache.org/docs/latest/api/scala/index.html#org.apache.spark.rdd.PairRDDFunctions):
 ```
 var comByKeyResult = joinedOrderDataDF.
